@@ -37,7 +37,7 @@ jobs:
 
       - name: Construir APK para Android
         run: |
-          flet build apk --project-path .
+          flet build apk
 
       - name: Subir APK generada
         uses: actions/upload-artifact@v4
