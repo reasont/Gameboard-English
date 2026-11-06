@@ -1,43 +1,46 @@
-Run flet build apk
-[06:50:08] Created Flutter bootstrap project from                               
-           gh:flet-dev/flet-build-template with ref 0.24.1 ✅                   
-           Customized app icons and splash images ✅                            
-[06:50:25] The current Dart SDK version is 3.3.4.                               
-                                                                                
-           Because file_picker >=8.1.0 requires SDK version >=3.4.0 <4.0.0 and  
-           file_picker >=8.0.6 <8.1.0 depends on win32 ^5.5.1, file_picker      
-           >=8.0.6 requires win32 ^5.5.1.                                       
-           And because flet ^0.24.0 depends on file_picker ^8.0.6, flet ^0.24.0 
-           requires win32 ^5.5.1.                                               
-           So, because win32 >=5.5.1 requires SDK version >=3.4.0 <4.0.0 and    
-           gameboard_english depends on flet 0.24.1, version solving failed.    
-                                                                                
-                                                                                
-           You can try one of the following suggestions to make the pubspec     
-           resolve:                                                             
-           * Try using the Dart SDK version: 3.13.7. See                        
-           https://dart.dev/get-dart.                                           
-           * Try using the Dart SDK version: 3.13.7. See                        
-           https://dart.dev/get-dart.                                           
-           * Consider downgrading your constraint on flet: dart pub add         
-           flet:^0.23.2                                                         
-                                                                                
-           Error building Flet app - see the log of failed command above.       
-[06:50:27] Doctor summary (to see all details, run flutter doctor -v):          
-           [✓] Flutter (Channel stable, 3.19.6, on Ubuntu 24.04.5 LTS           
-           7.0.0-1017-azure, locale C.UTF-8)                                    
-           [✓] Android toolchain - develop for Android devices (Android SDK     
-           version 37.0.0)                                                      
-           [✓] Chrome - develop for the web                                     
-           [✗] Linux toolchain - develop for Linux desktop                      
-               ✗ GTK 3.0 development libraries are required for Linux           
-           development.                                                         
-                 They are likely available from your distribution (e.g.: apt    
-           install libgtk-3-dev)                                                
-           [!] Android Studio (not installed)                                   
-           [✓] Connected device (2 available)                                   
-           [✓] Network resources                                                
-                                                                                
-           ! Doctor found issues in 2 categories.                               
-                                                                                
-Error: Process completed with exit code 255.
+name: Compilar APK con Flet
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar Flet moderno
+        run: |
+          python -m pip install --upgrade pip
+          pip install flet==0.24.1
+
+      - name: Aceptar licencias de Android
+        run: |
+          yes | flutter doctor --android-licenses || true
+
+      - name: Construir APK para Android
+        run: |
+          flet build apk
+
+      - name: Subir APK generada
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/apk/app-release.apk
