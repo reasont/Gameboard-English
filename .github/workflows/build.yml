@@ -17,7 +17,7 @@ jobs:
       - name: Configurar Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.9'
+          flutter-version: '3.19.6'
           channel: 'stable'
           cache: true
 
@@ -26,10 +26,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar Flet compatible
+      - name: Instalar Flet moderno
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.23.2
+          pip install flet==0.24.1
 
       - name: Aceptar licencias de Android
         run: |
