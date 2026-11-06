@@ -27,7 +27,7 @@ jobs:
 
       - name: Construir APK para Android
         run: |
-          flet build apk
+          flet GameBoard para apk
 
       - name: Subir APK generada
         uses: actions/upload-artifact@v4
