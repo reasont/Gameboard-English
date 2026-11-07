@@ -1,56 +1,42 @@
-# --- Manejador para examinar archivos del teléfono ---
-    def procesar_archivo_seleccionado(e: ft.FilePickerResultEvent):
-        if e.files:
-            file_path = e.files[0].path
-            try:
-                nuevas_oraciones = []
-                tema_actual = "General"
-                with open(file_path, "r", encoding="utf-8") as f:
-                    for linea in f:
-                        linea = linea.strip()
-                        if not linea: continue
-                        if linea.startswith('===') and linea.endswith('==='):
-                            tema_actual = linea.strip('= ').strip()
-                        else:
-                            nuevas_oraciones.append({'tema': tema_actual, 'texto': linea})
-                
-                if nuevas_oraciones:
-                    nonlocal oraciones_data
-                    oraciones_data = nuevas_oraciones
-                    estado["indice"] = 0
-                    cargar_oracion_actual()
-                    lbl_mensaje.value = "¡Archivo cargado con éxito! 📂"
-                    lbl_mensaje.color = "#4ECDC4"
-                    page.update()
-            except Exception as ex:
-                lbl_mensaje.value = f"Error al leer archivo"
-                lbl_mensaje.color = "#FF6B6B"
-                page.update()
+import flet as ft
 
-    file_picker = ft.FilePicker(on_result=procesar_archivo_seleccionado)
+def main(page: ft.Page):
+    page.title = "Gameboard Mobile"
+    page.theme_mode = ft.ThemeMode.DARK
+    page.bgcolor = "#282828"
+
+    txt_display = ft.Text("Presiona el botón para cargar oraciones", size=18, color="white")
+    audio_player = ft.Audio()
+    page.overlay.append(audio_player)
+
+    def procesar_archivo(e: ft.FilePickerResultEvent):
+        if e.files and e.files[0].path:
+            try:
+                with open(e.files[0].path, "r", encoding="utf-8") as f:
+                    contenido = f.read()
+                txt_display.value = f"Archivo cargado:\n{contenido[:200]}..."
+            except Exception as ex:
+                txt_display.value = "Error al leer el archivo"
+            page.update()
+
+    file_picker = ft.FilePicker(on_result=procesar_archivo)
     page.overlay.append(file_picker)
 
-    # Layout general
-    page.add(
-        ft.Row([lbl_titulo, lbl_contador], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-        lbl_tiempo,
-        ft.Container(content=lbl_estructura, bgcolor="#1A237E", padding=10, border_radius=8),
-        container_display,
-        ft.Center(content=lbl_mensaje),
-        grid_palabras,
-        ft.Divider(height=15, color="transparent"),
-        ft.Row([
-            ft.ElevatedButton("📂 Abrir TXT", bgcolor="#5CB85C", color="white", on_click=lambda _: file_picker.pick_files(allowed_extensions=["txt"])),
-            ft.ElevatedButton("🔊 Escuchar", bgcolor="#45B7D1", color="white", on_click=lambda _: hablar_oracion(estado["oracion_actual"]))
-        ], alignment=ft.MainAxisAlignment.SPACE_AROUND),
-        ft.Divider(height=10, color="transparent"),
-        ft.Row([
-            ft.ElevatedButton("Borrar", icon=ft.icons.BACKSPACE, bgcolor="#D9534F", color="white", on_click=borrar_ultima),
-            ft.ElevatedButton("Siguiente →", bgcolor="#4ECDC4", color="#282828", on_click=siguiente_oracion)
-        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-    )
+    def hablar_texto(e):
+        texto = "Hello, welcome to your English study app."
+        url = f"https://translate.google.com/translate_tts?ie=UTF-8&q={texto.replace(' ', '%20')}&tl=en&client=tw-ob"
+        audio_player.src = url
+        audio_player.play()
 
-    cargar_oracion_actual()
+    btn_cargar = ft.ElevatedButton("📂 Cargar TXT", on_click=lambda _: file_picker.pick_files(allowed_extensions=["txt"]))
+    btn_hablar = ft.ElevatedButton("🔊 Escuchar", on_click=hablar_texto)
+
+    page.add(
+        ft.Text("Estudio de Inglés", size=24, weight="bold", color="white"),
+        txt_display,
+        btn_cargar,
+        btn_hablar
+    )
 
 if name == "main":
     ft.app(target=main)
