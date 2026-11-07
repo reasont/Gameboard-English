@@ -1,23 +1,30 @@
 import flet as ft
+import traceback
 
 def main(page: ft.Page):
-    page.title = "Gameboard English"
+    page.title = "Diagnóstico de Error"
     page.theme_mode = ft.ThemeMode.DARK
-    page.bgcolor = "#282828"
+    page.bgcolor = "#1e1e1e"
 
-    txt_info = ft.Text("¡Aplicación lista y funcionando!", size=18, color="white")
-
-    def click_boton(e):
-        txt_info.value = "¡Botón presionado correctamente!"
-        page.update()
-
-    btn = ft.ElevatedButton("Probar interacción", on_click=click_boton)
+    error_text = ft.Text("Cargando aplicación...", color="white", size=14)
 
     page.add(
-        ft.Text("Estudio de Inglés", size=24, weight="bold", color="white"),
-        txt_info,
-        btn
+        ft.Text("Consola de Depuración", size=20, weight="bold", color="yellow"),
+        error_text
     )
+
+    try:
+        # Aquí es donde pondremos tu código real paso a paso
+        # Intentamos importar componentes comunes para ver cuál falla
+        error_text.value = "¡Inicialización exitosa! El motor de Python y Flet funcionan correctamente."
+        page.update()
+        
+    except Exception as ex:
+        # Si algo falla, lo atrapamos y lo mostramos en la pantalla del celular
+        tb_str = traceback.format_exc()
+        error_text.value = f"ERROR DETECTADO:\n{tb_str}"
+        error_text.color = "red"
+        page.update()
 
 if name == "main":
     ft.app(target=main)
