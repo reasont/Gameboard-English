@@ -1,0 +1,3 @@
+[app]
+main = "main.py"
+name = "Gameboard English"
