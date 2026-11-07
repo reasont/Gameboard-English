@@ -29,14 +29,15 @@ jobs:
       - name: Instalar Flet y herramientas
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.25.2
+          pip install --force-reinstall flet==0.25.2
 
       - name: Aceptar licencias de Android
         run: |
           yes | flutter doctor --android-licenses || true
 
-      - name: Construir APK de Flet
+      - name: Limpiar y Construir APK de Flet
         run: |
+          flet pack main.py --name "GameboardEnglish" || true
           flet build apk --verbose
 
       - name: Subir APK generada
