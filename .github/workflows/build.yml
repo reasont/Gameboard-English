@@ -31,14 +31,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install flet==0.23.0
 
-      - name: Inyectar configuración de Gradle
-        run: |
-          mkdir -p android
-          cp build.gradle android/build.gradle || true
-
       - name: Aceptar licencias de Android
         run: |
           yes | flutter doctor --android-licenses || true
+
+      - name: Parchear wakelock_plus en caché
+        run: |
+          TARGET_GRADLE="/home/runner/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/android/build.gradle"
+          if [ -f "$TARGET_GRADLE" ]; then
+            echo "Parcheando build.gradle de wakelock_plus..."
+            echo -e "\nafterEvaluate { project ->\n    if (project.hasProperty('android')) {\n        project.android {\n            compileSdkVersion 35\n            defaultConfig { minSdkVersion 21 targetSdkVersion 35 }\n        }\n    }\n}" >> "$TARGET_GRADLE"
+          else
+            echo "El archivo se parcheará después de resolver dependencias."
+          fi
 
       - name: Construir APK de Flet
         run: |
