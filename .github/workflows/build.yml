@@ -35,31 +35,13 @@ jobs:
         run: |
           yes | flutter doctor --android-licenses || true
 
-      - name: Construir APK de Flet (Primera pasada para generar la plantilla temporal)
+      - name: Forzar versión limpia de wakelock_plus antes de compilar
         run: |
-          flet build apk --verbose || true
-
-      - name: Parchear dinámicamente los build.gradle temporales
-        run: |
-          find /tmp -name "build.gradle" 2>/dev/null | while read -r file; do
-            if grep -q "allprojects" "$file" || grep -q "subprojects" "$file"; then
-              echo "Parcheando archivo temporal de Gradle: $file"
-              echo "" >> "$file"
-              echo "subprojects {" >> "$file"
-              echo "    afterEvaluate { project ->" >> "$file"
-              echo "        if (project.name == 'wakelock_plus') {" >> "$file"
-              echo "            project.extensions.extraProperties.set('flutter', [getSdkPath: { -> '/usr/local/lib/android/sdk' }])" >> "$file"
-              echo "        }" >> "$file"
-              echo "        if (project.hasProperty('android')) {" >> "$file"
-              echo "            project.android {" >> "$file"
-              echo "                compileSdkVersion 35" >> "$file"
-              echo "                defaultConfig { minSdkVersion 21 targetSdkVersion 35 }" >> "$file"
-              echo "            }" >> "$file"
-              echo "        }" >> "$file"
-              echo "    }" >> "$file"
-              echo "}" >> "$file"
-            fi
-          done
+          mkdir -p ~/.pub-cache
+          # Modificamos el pubspec_overrides.yaml para obligar a usar una versión moderna
+          echo "dependency_overrides:" > pubspec_overrides.yaml
+          echo "  wakelock_plus: ^1.8.2" >> pubspec_overrides.yaml
+          echo "  package_info_plus: ^8.1.0" >> pubspec_overrides.yaml
 
       - name: Construir APK de Flet Definitivo
         run: |
