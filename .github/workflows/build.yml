@@ -35,17 +35,30 @@ jobs:
         run: |
           yes | flutter doctor --android-licenses || true
 
-      - name: Parchear wakelock_plus en caché
+      - name: Construir APK de Flet (Primera pasada para descargar dependencias)
+        run: |
+          flet build apk --verbose || true
+
+      - name: Parchear wakelock_plus forzosamente en caché
         run: |
           TARGET_GRADLE="/home/runner/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/android/build.gradle"
           if [ -f "$TARGET_GRADLE" ]; then
-            echo "Parcheando build.gradle de wakelock_plus..."
-            echo -e "\nafterEvaluate { project ->\n    if (project.hasProperty('android')) {\n        project.android {\n            compileSdkVersion 35\n            defaultConfig { minSdkVersion 21 targetSdkVersion 35 }\n        }\n    }\n}" >> "$TARGET_GRADLE"
+            echo "¡Archivo encontrado! Aplicando parche de compilación a wakelock_plus..."
+            echo "" >> "$TARGET_GRADLE"
+            echo "afterEvaluate { project ->" >> "$TARGET_GRADLE"
+            echo "    if (project.hasProperty('android')) {" >> "$TARGET_GRADLE"
+            echo "        project.android {" >> "$TARGET_GRADLE"
+            echo "            compileSdkVersion 35" >> "$TARGET_GRADLE"
+            echo "            defaultConfig { minSdkVersion 21 targetSdkVersion 35 }" >> "$TARGET_GRADLE"
+            echo "        }" >> "$TARGET_GRADLE"
+            echo "    }" >> "$TARGET_GRADLE"
+            echo "}" >> "$TARGET_GRADLE"
           else
-            echo "El archivo se parcheará después de resolver dependencias."
+            echo "Error: No se encontró el archivo build.gradle de wakelock_plus"
+            exit 1
           fi
 
-      - name: Construir APK de Flet
+      - name: Construir APK de Flet Definitivo
         run: |
           flet build apk --verbose
 
