@@ -35,8 +35,28 @@ jobs:
         run: |
           yes | flutter doctor --android-licenses || true
 
-      - name: Crear init.gradle global para parchear wakelock_plus
+      - name: Construir APK de Flet (Primera ejecución para generar estructura)
         run: |
+          flet build apk --verbose || true
+
+      - name: Parchear directorios de Gradle y caché de wakelock_plus
+        run: |
+          # 1. Parchear el build.gradle global de la caché externa si existe
+          TARGET_GRADLE="/home/runner/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/android/build.gradle"
+          if [ -f "$TARGET_GRADLE" ]; then
+            echo "Inyectando propiedades en wakelock_plus..."
+            echo "" >> "$TARGET_GRADLE"
+            echo "afterEvaluate { project ->" >> "$TARGET_GRADLE"
+            echo "    if (project.hasProperty('android')) {" >> "$TARGET_GRADLE"
+            echo "        project.android {" >> "$TARGET_GRADLE"
+            echo "            compileSdkVersion 35" >> "$TARGET_GRADLE"
+            echo "            defaultConfig { minSdkVersion 21 targetSdkVersion 35 }" >> "$TARGET_GRADLE"
+            echo "        }" >> "$TARGET_GRADLE"
+            echo "    }" >> "$TARGET_GRADLE"
+            echo "}" >> "$TARGET_GRADLE"
+          fi
+
+          # 2. Inyectar init.gradle robusto para interceptar cualquier subproyecto
           mkdir -p ~/.gradle
           echo "allprojects {
               afterEvaluate { project ->
@@ -55,7 +75,7 @@ jobs:
               }
           }" > ~/.gradle/init.gradle
 
-      - name: Construir APK de Flet Definitivo
+      - name: Construir APK de Flet Final
         run: |
           flet build apk --verbose
 
