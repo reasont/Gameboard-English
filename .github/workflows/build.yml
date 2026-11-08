@@ -31,12 +31,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install flet==0.23.0
 
+      - name: Inyectar configuración de Gradle
+        run: |
+          mkdir -p android
+          cp build.gradle android/build.gradle || true
+
       - name: Aceptar licencias de Android
         run: |
           yes | flutter doctor --android-licenses || true
 
       - name: Construir APK de Flet
         run: |
+          flutter clean
           flet build apk --verbose
 
       - name: Subir APK generada
