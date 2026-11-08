@@ -35,28 +35,25 @@ jobs:
         run: |
           yes | flutter doctor --android-licenses || true
 
-      - name: Construir APK de Flet (Primera pasada para descargar dependencias)
+      - name: Crear init.gradle global para parchear wakelock_plus
         run: |
-          flet build apk --verbose || true
-
-      - name: Parchear wakelock_plus forzosamente en caché
-        run: |
-          TARGET_GRADLE="/home/runner/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/android/build.gradle"
-          if [ -f "$TARGET_GRADLE" ]; then
-            echo "¡Archivo encontrado! Aplicando parche de compilación a wakelock_plus..."
-            echo "" >> "$TARGET_GRADLE"
-            echo "afterEvaluate { project ->" >> "$TARGET_GRADLE"
-            echo "    if (project.hasProperty('android')) {" >> "$TARGET_GRADLE"
-            echo "        project.android {" >> "$TARGET_GRADLE"
-            echo "            compileSdkVersion 35" >> "$TARGET_GRADLE"
-            echo "            defaultConfig { minSdkVersion 21 targetSdkVersion 35 }" >> "$TARGET_GRADLE"
-            echo "        }" >> "$TARGET_GRADLE"
-            echo "    }" >> "$TARGET_GRADLE"
-            echo "}" >> "$TARGET_GRADLE"
-          else
-            echo "Error: No se encontró el archivo build.gradle de wakelock_plus"
-            exit 1
-          fi
+          mkdir -p ~/.gradle
+          echo "allprojects {
+              afterEvaluate { project ->
+                  if (project.name == 'wakelock_plus') {
+                      project.extensions.extraProperties.set('flutter', [getSdkPath: { -> '/usr/local/lib/android/sdk' }])
+                      if (project.hasProperty('android')) {
+                          project.android {
+                              compileSdkVersion 35
+                              defaultConfig {
+                                  minSdkVersion 21
+                                  targetSdkVersion 35
+                              }
+                          }
+                      }
+                  }
+              }
+          }" > ~/.gradle/init.gradle
 
       - name: Construir APK de Flet Definitivo
         run: |
