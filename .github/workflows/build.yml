@@ -42,7 +42,6 @@ jobs:
 
       - name: Construir APK de Flet
         run: |
-          flutter clean
           flet build apk --verbose
 
       - name: Subir APK generada
