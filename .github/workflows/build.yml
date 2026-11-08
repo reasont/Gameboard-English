@@ -35,10 +35,12 @@ jobs:
         run: |
           yes | flutter doctor --android-licenses || true
 
-      - name: Forzar versión limpia de wakelock_plus antes de compilar
+      - name: Purgar wakelock_plus de la caché y forzar versión limpia
         run: |
-          mkdir -p ~/.pub-cache
-          # Modificamos el pubspec_overrides.yaml para obligar a usar una versión moderna
+          # Eliminar cualquier rastro de la versión vieja en la caché de la máquina
+          rm -rf ~/.pub-cache/hosted/pub.dev/wakelock_plus-* || true
+          
+          # Asegurar un pubspec_overrides limpio que fuerce la versión libre de errores
           echo "dependency_overrides:" > pubspec_overrides.yaml
           echo "  wakelock_plus: ^1.8.2" >> pubspec_overrides.yaml
           echo "  package_info_plus: ^8.1.0" >> pubspec_overrides.yaml
