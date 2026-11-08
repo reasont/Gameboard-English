@@ -19,5 +19,16 @@ subprojects {
                 }
             }
         }
+        
+        // Parche definitivo para el error de 'extension android type LibraryExtension' en wakelock_plus
+        try {
+            if (project.name == "wakelock_plus") {
+                project.extensions.extraProperties.set("flutter", [
+                    getSdkPath: { -> "/usr/local/lib/android/sdk" }
+                ])
+            }
+        } catch (Exception e) {
+            // Ignorar si ya está definida
+        }
     }
 }
