@@ -19,10 +19,5 @@ subprojects {
                 }
             }
         }
-        
-        // Solución para la propiedad 'flutter' faltante en wakelock_plus
-        if (!project.extensions.extraProperties.has("flutter")) {
-            project.extensions.extraProperties.set("flutter", [getSdkPath: { -> "" }])
-        }
     }
 }
