@@ -35,15 +35,46 @@ jobs:
         run: |
           yes | flutter doctor --android-licenses || true
 
-      - name: Purgar wakelock_plus de la caché y forzar versión limpia
+      - name: Destruir la versión 1.4.0 de wakelock_plus y parchear el sistema
         run: |
-          # Eliminar cualquier rastro de la versión vieja en la caché de la máquina
-          rm -rf ~/.pub-cache/hosted/pub.dev/wakelock_plus-* || true
+          # Borramos por completo la carpeta conflictiva de la caché para que no pueda ser utilizada
+          rm -rf ~/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0
           
-          # Asegurar un pubspec_overrides limpio que fuerce la versión libre de errores
-          echo "dependency_overrides:" > pubspec_overrides.yaml
-          echo "  wakelock_plus: ^1.8.2" >> pubspec_overrides.yaml
-          echo "  package_info_plus: ^8.1.0" >> pubspec_overrides.yaml
+          # Creamos un directorio falso o vacío y le inyectamos un build.gradle totalmente compatible con SDK 35
+          mkdir -p ~/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/android
+          
+          cat << 'EOF' > ~/.pub-cache/hosted/pub.dev/wakelock_plus-1.4.0/android/build.gradle
+          group 'com.example.wakelock_plus'
+          version '1.4.0'
+
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:7.3.0'
+              }
+          }
+
+          rootProject.allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          apply plugin: 'com.android.library'
+
+          android {
+              compileSdkVersion 35
+              namespace 'com.example.wakelock_plus'
+              defaultConfig {
+                  minSdkVersion 21
+                  targetSdkVersion 35
+              }
+          }
+          EOF
 
       - name: Construir APK de Flet Definitivo
         run: |
