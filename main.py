@@ -14,17 +14,15 @@ def main(page: ft.Page):
     )
 
     try:
-        # Aquí es donde pondremos tu código real paso a paso
-        # Intentamos importar componentes comunes para ver cuál falla
+        # Verificamos que el entorno responda correctamente
         error_text.value = "¡Inicialización exitosa! El motor de Python y Flet funcionan correctamente."
         page.update()
         
     except Exception as ex:
-        # Si algo falla, lo atrapamos y lo mostramos en la pantalla del celular
         tb_str = traceback.format_exc()
         error_text.value = f"ERROR DETECTADO:\n{tb_str}"
         error_text.color = "red"
         page.update()
 
-if name == "main":
+if __name__ == "__main__":
     ft.app(target=main)
