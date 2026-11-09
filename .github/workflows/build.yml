@@ -1,4 +1,4 @@
-name: Compilar APK con Flet
+name: Compilar APK con Flutter Nativo
 on:
   push:
     branches: [ main ]
@@ -26,47 +26,52 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar Flet Estable
+      - name: Instalar Flet y Serious Python
         run: |
           python -m pip install --upgrade pip
-          pip install flet==0.23.0
+          pip install flet==0.23.0 serious-python
 
-      - name: Aceptar licencias de Android
+      - name: Forzar dependencias limpias en pubspec.yaml
+        run: |
+          # Aseguramos que la versión de wakelock_plus sea la moderna y compatible con SDK 35
+          cat << 'EOF' > pubspec.yaml
+          name: gameboard_english
+          description: A Flet-based English study app.
+          publish_to: "none"
+          version: 1.0.0+1
+
+          environment:
+            sdk: ">=3.0.0 <4.0.0"
+
+          dependencies:
+            flutter:
+              sdk: flutter
+            flet: ^0.23.2
+            wakelock_plus: ^1.8.2
+            package_info_plus: ^8.1.0
+
+          flutter:
+            uses-material-design: true
+            assets:
+              - assets/
+          EOF
+
+      - name: Crear estructura nativa de Flutter para la app de Python
+        run: |
+          # Inicializamos el soporte de Flutter en el proyecto actual
+          flutter create . --org com.flet --project-name gameboard_english --platforms android
+          
+          # Empaquetamos el código de Python usando serious-python dentro de los assets
+          mkdir -p assets
+          python -m serious_python.main package . --output assets/app.zip
+
+      - name: Aceptar licencias de Android y compilar APK
         run: |
           yes | flutter doctor --android-licenses || true
-
-      - name: Parchear Flet para actualizar wakelock_plus en su origen
-        run: |
-          python -c '
-          import flet, os
-          flet_dir = os.path.dirname(flet.__file__)
-          print("Buscando archivos de plantilla en:", flet_dir)
-          count = 0
-          for root, dirs, files in os.walk(flet_dir):
-              for file in files:
-                  if file.endswith((".yaml", ".yml", ".json", ".py", ".gradle")):
-                      path = os.path.join(root, file)
-                      try:
-                          with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                              content = f.read()
-                          if "wakelock_plus" in content or "1.4.0" in content:
-                              new_content = content.replace("1.4.0", "1.8.2")
-                              if new_content != content:
-                                  with open(path, "w", encoding="utf-8") as f:
-                                      f.write(new_content)
-                                  print(f"Parcheado con éxito: {path}")
-                                  count += 1
-                      except Exception as e:
-                          pass
-          print(f"Total de archivos parcheados: {count}")
-          '
-
-      - name: Construir APK de Flet Definitivo
-        run: |
-          flet build apk --verbose
+          flutter build apk --release --verbose
 
       - name: Subir APK generada
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
